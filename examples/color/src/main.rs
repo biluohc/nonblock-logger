@@ -8,13 +8,14 @@ use std::{fs::OpenOptions, io, time};
 
 fn log() -> JoinHandle {
     let formater = BaseFormater::new().local(true).color(true).level(4);
-    // dbg!(&formater);
+    println!("{:?}", formater);
 
     let filter = BaseFilter::new()
         .starts_with(true)
         // .notfound(false)
         .chain("logs", LevelFilter::Trace)
         .chain("logt", LevelFilter::Off);
+    println!("{:?}", filter);
 
     let outputer = BaseOutputer::stdout(filter.max_level_get())
         .chain(
@@ -29,19 +30,18 @@ fn log() -> JoinHandle {
         .unwrap()
         .chain(LevelFilter::Error, io::stderr())
         .unwrap();
+    println!("{:?}", outputer);
 
-    println!("{:?}", filter);
-
-    let handle = NonblockLogger::new()
+    let logger = NonblockLogger::new()
         // ::with_capacity(65536)
         .formater(formater)
         .filter(filter)
-        .outputer(outputer)
-        .spawn()
-        .map_err(|e| eprintln!("failed to init nonblock_logger: {:?}", e))
-        .unwrap();
+        .outputer(outputer);
+    println!("{:?}", logger);    
 
-    handle
+    logger.spawn()
+        .map_err(|e| eprintln!("failed to init nonblock_logger: {:?}", e))
+        .unwrap()
 }
 
 fn main() {

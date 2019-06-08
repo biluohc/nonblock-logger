@@ -13,7 +13,7 @@ mod output;
 
 pub use filter::{BaseFilter, Filter};
 #[cfg(any(feature = "color"))]
-pub use format::color::{ColoredFixedLevel, ColoredFg, ColoredFgWith, ColoredLogConfig};
+pub use format::color::{ColoredFg, ColoredFgWith, ColoredFixedLevel, ColoredLogConfig};
 pub use format::{current_thread_name, BaseFormater, FixedLevel, Formater};
 pub use output::{BaseOutputer, Output, Outputer};
 
@@ -23,7 +23,7 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
 };
-use std::{io, mem, thread};
+use std::{fmt, io, mem, thread};
 
 static mut LOGGER: Option<NonblockLoggerGlobal> = None;
 
@@ -216,6 +216,15 @@ impl Log for NonblockLoggerGlobal {
 
             (*g.sendfn)(&g.sender, Some(message))
         }
+    }
+}
+
+impl fmt::Debug for NonblockLogger {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("NonblockLogger")
+            .field("name", &self.name)
+            .field("exited", &self.exited)
+            .finish()
     }
 }
 
