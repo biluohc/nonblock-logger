@@ -1,0 +1,9 @@
+[package]
+name = "feature_color"
+version = "0.1.0"
+authors = ["Wspsxing <biluohc@qq.com>"]
+edition = "2018"
+
+[dependencies]
+log = "0.4"
+nonblock-logger = { path = "../..", features = [ "color" ] }

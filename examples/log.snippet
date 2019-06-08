@@ -1,0 +1,12 @@
+    // Wrong suffix to avoid compile directed
+    for i in 0..std::env::args()
+        .nth(1)
+        .and_then(|s| s.parse::<usize>().ok())
+        .unwrap_or(10)
+    {
+        error!("booting up, error {}", i);
+        warn!("booting up, warn  {}", i);
+        info!("booting up, info  {}", i);
+        debug!("booting up, debug {}", i);
+        trace!("booting up, trace {}", i);
+    }

@@ -1,9 +1,8 @@
-#[macro_use]
-extern crate log;
 extern crate chrono;
-// #[cfg(any(feature = "color"))]
+#[cfg(any(feature = "color"))]
 extern crate colored;
 extern crate crossbeam;
+extern crate log;
 
 #[macro_use]
 #[doc(hidden)]
@@ -13,7 +12,9 @@ mod format;
 mod output;
 
 pub use filter::{BaseFilter, Filter};
-pub use format::{current_thread_name, BaseFormater, ColoredFg, ColoredFgWith, ColoredLogConfig, Formater};
+#[cfg(any(feature = "color"))]
+pub use format::color::{ColoredFg, ColoredFgWith, ColoredLogConfig};
+pub use format::{current_thread_name, BaseFormater, Formater};
 pub use output::{BaseOutputer, Output, Outputer};
 
 use crossbeam::channel;

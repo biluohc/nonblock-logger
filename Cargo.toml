@@ -1,13 +1,14 @@
 [package]
 name = "nonblock-logger"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Wspsxing <biluohc@qq.com>"]
 # edition = "2018"
 
 [features]
+color = ["colored"]
+
 [dependencies]
 log = "0.4"
 chrono = "0.4"
 crossbeam = "0.7"
-colored = "1.8"
-
+colored = { version = "1.8", optional = true }
