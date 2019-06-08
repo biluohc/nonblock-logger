@@ -13,8 +13,8 @@ mod output;
 
 pub use filter::{BaseFilter, Filter};
 #[cfg(any(feature = "color"))]
-pub use format::color::{ColoredFg, ColoredFgWith, ColoredLogConfig};
-pub use format::{current_thread_name, BaseFormater, Formater};
+pub use format::color::{ColoredFixedLevel, ColoredFg, ColoredFgWith, ColoredLogConfig};
+pub use format::{current_thread_name, BaseFormater, FixedLevel, Formater};
 pub use output::{BaseOutputer, Output, Outputer};
 
 use crossbeam_channel as channel;

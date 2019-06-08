@@ -59,7 +59,7 @@ fn run_project(dir: &str, example: &str, release: bool) {
         .map_err(|e| eprintln!("spawn cargo child process failed: {:?}", e))
         .unwrap();
 
-     assert!(exit.success());
+    assert!(exit.success());
 
     if example.is_empty() {
         set_current_dir(origin_path.as_path()).unwrap();

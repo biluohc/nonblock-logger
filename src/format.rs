@@ -1,6 +1,7 @@
 use chrono;
 use log::{Level, Record};
 
+use std::convert::AsRef;
 use std::{fmt, mem, thread};
 
 pub trait Formater: Send + Sync + 'static {
@@ -22,12 +23,15 @@ impl Formater for BaseFormater {
         };
 
         #[cfg(any(feature = "color"))]
-        let level = self.color.colordfg(record.level(), AlignedLevel::new(record.level()));
+        let level = FixedLevel::with_color(record.level(), &self.color)
+            .length(self.level)
+            .into_colored()
+            .into_coloredfg();
         #[cfg(not(feature = "color"))]
-        let level = AlignedLevel::new(record.level());
+        let level = FixedLevel::new(record.level()).length(self.level);
 
         format!(
-            "{} {:5} [{}] ({}:{}) [{}] -- {}\n",
+            "{} {} [{}] ({}:{}) [{}] -- {}\n",
             datetime,
             level,
             current_thread_name(),
@@ -42,6 +46,7 @@ impl Formater for BaseFormater {
 #[derive(Debug, Clone)]
 pub struct BaseFormater {
     local: bool,
+    level: usize,
     #[cfg(any(feature = "color"))]
     color: ColoredLogConfig,
 }
@@ -56,6 +61,7 @@ impl BaseFormater {
     pub fn new() -> Self {
         Self {
             local: false,
+            level: 5,
             #[cfg(any(feature = "color"))]
             color: ColoredLogConfig::new(),
         }
@@ -64,11 +70,14 @@ impl BaseFormater {
         self.local = local;
         self
     }
+    pub fn level(mut self, level: usize) -> Self {
+        self.level = level;
+        self
+    }
     #[cfg(any(feature = "color"))]
-    pub fn color(self, color_: bool) -> Self {
-        let Self { local, color } = self;
-        let color = color.color(color_);
-        Self { local, color }
+    pub fn color(mut self, color_: bool) -> Self {
+        self.color.color = color_;
+        self
     }
     #[cfg(any(feature = "color"))]
     pub fn colored(mut self, color: ColoredLogConfig) -> Self {
@@ -92,27 +101,82 @@ pub fn current_thread_name() -> &'static str {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct AlignedLevel(Level);
+pub struct FixedLevel {
+    str: &'static str,
+    length: usize,
+    #[cfg(any(feature = "color"))]
+    color: Option<Color>,
+}
 
-impl AlignedLevel {
-    fn new(level: Level) -> Self {
-        AlignedLevel(level)
+impl FixedLevel {
+    #[inline]
+    pub fn new(level: Level) -> Self {
+        let str = match level {
+            Level::Trace => "TRACE",
+            Level::Debug => "DEBUG",
+            Level::Info => "INFO ",
+            Level::Warn => "WARN ",
+            Level::Error => "ERROR",
+        };
+
+        Self {
+            str,
+            length: 5,
+            #[cfg(any(feature = "color"))]
+            color: None,
+        }
+    }
+    #[inline]
+    pub fn length(mut self, length: usize) -> Self {
+        debug_assert!(length <= 5);
+        self.length = length;
+        self
+    }
+    #[inline]
+    #[cfg(any(feature = "color"))]
+    pub fn with_color(level: Level, color_: &ColoredLogConfig) -> Self {
+        let (str, color) = match level {
+            Level::Trace => ("TRACE", color_.trace),
+            Level::Debug => ("DEBUG", color_.debug),
+            Level::Info => ("INFO ", color_.info),
+            Level::Warn => ("WARN ", color_.warn),
+            Level::Error => ("ERROR", color_.error),
+        };
+
+        Self {
+            str,
+            length: 5,
+            color: if color_.color { Some(color) } else { None },
+        }
+    }
+    #[cfg(any(feature = "color"))]
+    pub fn into_colored(self) -> ColoredFixedLevel {
+        ColoredFixedLevel::new(self)
     }
 }
 
-impl fmt::Display for AlignedLevel {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:5}", self.0)
+impl fmt::Display for FixedLevel {
+    #[inline]
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.write_str(self.as_ref())
+    }
+}
+
+impl AsRef<str> for FixedLevel {
+    #[inline]
+    fn as_ref(&self) -> &'static str {
+        unsafe { self.str.get_unchecked(0..self.length) }
     }
 }
 
 #[cfg(any(feature = "color"))]
-use self::color::ColoredLogConfig;
+use self::color::{Color, ColoredFixedLevel, ColoredLogConfig};
 #[cfg(any(feature = "color"))]
 pub mod color {
-    use colored::Color;
+    pub use colored::Color;
+    use format::FixedLevel;
     use log::Level;
-    use std::fmt;
+    use std::{fmt, mem};
 
     pub struct ColoredFgWith<T> {
         text: T,
@@ -134,12 +198,12 @@ pub mod color {
 
     #[derive(Debug, Clone)]
     pub struct ColoredLogConfig {
-        error: Color,
-        warn: Color,
-        info: Color,
-        debug: Color,
-        trace: Color,
-        color: bool,
+        pub error: Color,
+        pub warn: Color,
+        pub info: Color,
+        pub debug: Color,
+        pub trace: Color,
+        pub color: bool,
     }
 
     impl Default for ColoredLogConfig {
@@ -184,20 +248,20 @@ pub mod color {
             self.color = color;
             self
         }
-        pub fn colordfg<T>(&self, level: Level, t: T) -> ColoredFgWith<T>
+        pub fn coloredfg<T>(&self, level: Level, t: T) -> ColoredFgWith<T>
         where
             T: ColoredFg<T>,
         {
-            t.colordfg(level, self)
+            t.coloredfg(level, self)
         }
     }
 
     pub trait ColoredFg<T> {
-        fn colordfg(self, level: Level, &ColoredLogConfig) -> ColoredFgWith<T>;
+        fn coloredfg(self, level: Level, &ColoredLogConfig) -> ColoredFgWith<T>;
     }
 
     impl<T: fmt::Display> ColoredFg<T> for T {
-        fn colordfg(self, level: Level, config: &ColoredLogConfig) -> ColoredFgWith<Self> {
+        fn coloredfg(self, level: Level, config: &ColoredLogConfig) -> ColoredFgWith<Self> {
             let color = if config.color {
                 let colored = match level {
                     Level::Error => config.error,
@@ -212,6 +276,33 @@ pub mod color {
             };
 
             ColoredFgWith { color, text: self }
+        }
+    }
+
+    // impl ColoredFg<ColoredFixedLevel> for ColoredFixedLevel {
+    //     #[inline]
+    //     fn coloredfg(self, _level: Level, _config: &ColoredLogConfig) -> ColoredFgWith<Self> {
+    //         self.into_coloredfg()
+    //     }
+    // }
+    // wait specialization for fixedLevel
+    #[derive(Debug, Clone, Copy)]
+    pub struct ColoredFixedLevel(FixedLevel);
+    impl ColoredFixedLevel {
+        #[inline]
+        pub fn new(fl: FixedLevel) -> Self {
+            ColoredFixedLevel(fl)
+        }
+        #[inline]
+        pub fn into_coloredfg(mut self) -> ColoredFgWith<Self> {
+            let color = mem::replace(&mut self.0.color, None);
+            ColoredFgWith { color, text: self }
+        }
+    }
+    impl fmt::Display for ColoredFixedLevel {
+        #[inline]
+        fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+            fmt.write_str(self.0.as_ref())
         }
     }
 }

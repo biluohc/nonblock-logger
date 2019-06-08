@@ -7,7 +7,8 @@ use nonblock_logger::{messages_in_channel, BaseFilter, BaseFormater, BaseOutpute
 use std::{fs::OpenOptions, io, time};
 
 fn log() -> JoinHandle {
-    let formater = BaseFormater::new().local(true).color(true);
+    let formater = BaseFormater::new().local(true).color(true).level(4);
+    // dbg!(&formater);
 
     let filter = BaseFilter::new()
         .starts_with(true)
