@@ -157,7 +157,7 @@ pub mod color {
                 info: Color::Green,
                 debug: Color::Cyan,
                 trace: Color::BrightBlue,
-                color: false,
+                color: true,
             }
         }
         pub fn error(mut self, error: Color) -> Self {

@@ -18,14 +18,12 @@ fn log() -> JoinHandle {
     let outputer = BaseOutputer::stdout(filter.max_level_get())
         .chain(
             LevelFilter::Info,
-            io::BufWriter::new(
-                OpenOptions::new()
-                    .write(true)
-                    .truncate(true)
-                    .create(true)
-                    .open("logtest.txt")
-                    .unwrap(),
-            )
+            OpenOptions::new()
+                .write(true)
+                .truncate(true)
+                .create(true)
+                .open("logtest.txt")
+                .unwrap(),
         )
         .unwrap()
         .chain(LevelFilter::Error, io::stderr())

@@ -1,7 +1,7 @@
 extern crate chrono;
 #[cfg(any(feature = "color"))]
 extern crate colored;
-extern crate crossbeam;
+extern crate crossbeam_channel;
 extern crate log;
 
 #[macro_use]
@@ -17,7 +17,7 @@ pub use format::color::{ColoredFg, ColoredFgWith, ColoredLogConfig};
 pub use format::{current_thread_name, BaseFormater, Formater};
 pub use output::{BaseOutputer, Output, Outputer};
 
-use crossbeam::channel;
+use crossbeam_channel as channel;
 use log::{set_logger, set_max_level, Level, Log, Metadata, Record, SetLoggerError};
 use std::sync::{
     atomic::{AtomicBool, Ordering},

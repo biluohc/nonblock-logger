@@ -10,5 +10,5 @@ color = ["colored"]
 [dependencies]
 log = "0.4"
 chrono = "0.4"
-crossbeam = "0.7"
+crossbeam-channel = "0.3"
 colored = { version = "1.8", optional = true }
