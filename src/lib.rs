@@ -171,7 +171,7 @@ impl NonblockLogger {
 }
 
 // if channel is full, send will block, but try_send don't
-pub fn sendfn(sender: &Sender, msg: Option<Message>) {
+fn sendfn(sender: &Sender, msg: Option<Message>) {
     if msg.is_some() {
         sender.try_send(msg).expect("NonblockLogger send log message falied!")
     } else {

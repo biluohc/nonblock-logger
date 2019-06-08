@@ -14,39 +14,63 @@ impl Formater for BaseFormater {
         Box::new(self) as _
     }
     fn format(&self, record: &Record) -> String {
-        const DATETIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S.%3f";
-
-        let datetime = if self.local {
-            chrono::Local::now().format(DATETIME_FORMAT)
-        } else {
-            chrono::Utc::now().format(DATETIME_FORMAT)
-        };
-
-        #[cfg(any(feature = "color"))]
-        let level = FixedLevel::with_color(record.level(), &self.color)
-            .length(self.level)
-            .into_colored()
-            .into_coloredfg();
-        #[cfg(not(feature = "color"))]
-        let level = FixedLevel::new(record.level()).length(self.level);
-
-        format!(
-            "{} {} [{}] ({}:{}) [{}] -- {}\n",
-            datetime,
-            level,
-            current_thread_name(),
-            record.file().unwrap_or("*"),
-            record.line().unwrap_or(0),
-            record.target(),
-            record.args()
-        )
+        self.formatfn_get()(self, record)
     }
 }
 
-#[derive(Debug, Clone)]
+pub fn format(base: &BaseFormater, record: &Record) -> String {
+    let datetime = if base.local_get() {
+        chrono::Local::now().format(base.datetime_get())
+    } else {
+        chrono::Utc::now().format(base.datetime_get())
+    };
+
+    #[cfg(any(feature = "color"))]
+    let level = FixedLevel::with_color(record.level(), base.color_get())
+        .length(base.level_get())
+        .into_colored()
+        .into_coloredfg();
+    #[cfg(not(feature = "color"))]
+    let level = FixedLevel::new(record.level()).length(base.level_get());
+
+    format!(
+        "{} {} [{}] ({}:{}) [{}] -- {}\n",
+        datetime,
+        level,
+        current_thread_name(),
+        record.file().unwrap_or("*"),
+        record.line().unwrap_or(0),
+        record.target(),
+        record.args()
+    )
+}
+
+impl fmt::Debug for BaseFormater {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        #[cfg(any(feature = "color"))]
+        return fmt
+            .debug_struct("BaseFormater")
+            .field("local", &self.local)
+            .field("level", &self.level)
+            .field("datetime", &self.datetime)
+            .field("color", &self.color)
+            .finish();
+
+        #[cfg(not(feature = "color"))]
+        fmt.debug_struct("BaseFormater")
+            .field("local", &self.local)
+            .field("level", &self.level)
+            .field("datetime", &self.datetime)
+            .finish()
+    }
+}
+
+// #[derive(Debug)]
 pub struct BaseFormater {
     local: bool,
     level: usize,
+    datetime: String,
+    formatfn: Box<dyn Fn(&Self, &Record) -> String + Send + Sync + 'static>,
     #[cfg(any(feature = "color"))]
     color: ColoredLogConfig,
 }
@@ -62,6 +86,8 @@ impl BaseFormater {
         Self {
             local: false,
             level: 5,
+            formatfn: Box::new(format) as _,
+            datetime: "%Y-%m-%d %H:%M:%S.%3f".to_owned(),
             #[cfg(any(feature = "color"))]
             color: ColoredLogConfig::new(),
         }
@@ -70,14 +96,46 @@ impl BaseFormater {
         self.local = local;
         self
     }
+    #[inline]
+    pub fn local_get(&self) -> bool {
+        self.local
+    }
     pub fn level(mut self, level: usize) -> Self {
         self.level = level;
         self
+    }
+    #[inline]
+    pub fn level_get(&self) -> usize {
+        self.level
+    }
+    pub fn datetime<S: Into<String>>(mut self, datetime: S) -> Self {
+        self.datetime = datetime.into();
+        self
+    }
+    #[inline]
+    pub fn datetime_get(&self) -> &str {
+        &self.datetime
+    }
+    pub fn formatfn<F>(mut self, format: F) -> Self
+    where
+        F: Fn(&Self, &Record) -> String + Send + Sync + 'static,
+    {
+        self.formatfn = Box::new(format) as _;
+        self
+    }
+    #[inline]
+    pub fn formatfn_get(&self) -> &(Fn(&Self, &Record) -> String + Send + Sync + 'static) {
+        &*self.formatfn
     }
     #[cfg(any(feature = "color"))]
     pub fn color(mut self, color_: bool) -> Self {
         self.color.color = color_;
         self
+    }
+    #[inline]
+    #[cfg(any(feature = "color"))]
+    pub fn color_get(&self) -> &ColoredLogConfig {
+        &self.color
     }
     #[cfg(any(feature = "color"))]
     pub fn colored(mut self, color: ColoredLogConfig) -> Self {
@@ -86,9 +144,9 @@ impl BaseFormater {
     }
 }
 
-pub struct ThreadId(u64);
-
 pub fn current_thread_name() -> &'static str {
+    struct ThreadId(u64);
+
     thread_local!(static THREAD_NAME: String = {
         let thread = thread::current();
         format!("{}.{}", unsafe { mem::transmute::<_, ThreadId>(thread.id()).0 }, thread.name()
