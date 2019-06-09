@@ -14,7 +14,7 @@ impl Formater for BaseFormater {
         Box::new(self) as _
     }
     fn format(&self, record: &Record) -> String {
-        self.formatfn_get()(self, record)
+        self.formater_get()(self, record)
     }
 }
 
@@ -70,7 +70,7 @@ pub struct BaseFormater {
     local: bool,
     level: usize,
     datetime: String,
-    formatfn: Box<dyn Fn(&Self, &Record) -> String + Send + Sync + 'static>,
+    formater: Box<dyn Fn(&Self, &Record) -> String + Send + Sync + 'static>,
     #[cfg(any(feature = "color"))]
     color: ColoredLogConfig,
 }
@@ -86,7 +86,7 @@ impl BaseFormater {
         Self {
             local: false,
             level: 5,
-            formatfn: Box::new(format) as _,
+            formater: Box::new(format) as _,
             datetime: "%Y-%m-%d %H:%M:%S.%3f".to_owned(),
             #[cfg(any(feature = "color"))]
             color: ColoredLogConfig::new(),
@@ -116,16 +116,16 @@ impl BaseFormater {
     pub fn datetime_get(&self) -> &str {
         &self.datetime
     }
-    pub fn formatfn<F>(mut self, format: F) -> Self
+    pub fn formater<F>(mut self, formater: F) -> Self
     where
         F: Fn(&Self, &Record) -> String + Send + Sync + 'static,
     {
-        self.formatfn = Box::new(format) as _;
+        self.formater = Box::new(formater) as _;
         self
     }
     #[inline]
-    pub fn formatfn_get(&self) -> &(Fn(&Self, &Record) -> String + Send + Sync + 'static) {
-        &*self.formatfn
+    pub fn formater_get(&self) -> &(Fn(&Self, &Record) -> String + Send + Sync + 'static) {
+        &*self.formater
     }
     #[cfg(any(feature = "color"))]
     pub fn color(mut self, color_: bool) -> Self {
