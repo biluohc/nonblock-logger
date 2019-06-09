@@ -231,8 +231,8 @@ impl AsRef<str> for FixedLevel {
 use self::color::{Color, ColoredFixedLevel, ColoredLogConfig};
 #[cfg(any(feature = "color"))]
 pub mod color {
+    use super::FixedLevel;
     pub use colored::Color;
-    use format::FixedLevel;
     use log::Level;
     use std::{fmt, mem};
 

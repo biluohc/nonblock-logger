@@ -7,15 +7,17 @@ extern crate log;
 #[macro_use]
 #[doc(hidden)]
 pub mod macros;
+mod consumer;
+mod error;
 mod filter;
-mod format;
-mod output;
+mod formater;
 
+pub use consumer::{BaseConsumer, Consumer, Outputer};
+pub use error::Error;
 pub use filter::{BaseFilter, Filter};
 #[cfg(any(feature = "color"))]
-pub use format::color::{ColoredFg, ColoredFgWith, ColoredFixedLevel, ColoredLogConfig};
-pub use format::{current_thread_name, BaseFormater, FixedLevel, Formater};
-pub use output::{BaseOutputer, Output, Outputer};
+pub use formater::color::{ColoredFg, ColoredFgWith, ColoredFixedLevel, ColoredLogConfig};
+pub use formater::{current_thread_name, BaseFormater, FixedLevel, Formater};
 
 use crossbeam_channel as channel;
 use log::{set_logger, set_max_level, Level, Log, Metadata, Record, SetLoggerError};
@@ -23,7 +25,7 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
 };
-use std::{fmt, io, mem, thread};
+use std::{fmt, mem, thread};
 
 static mut LOGGER: Option<NonblockLoggerGlobal> = None;
 
@@ -33,7 +35,7 @@ pub struct NonblockLogger {
     name: Option<String>,
     filter: Box<dyn Filter>,
     formater: Box<dyn Formater>,
-    outputer: Option<Box<dyn Outputer>>,
+    consumer: Option<Box<dyn Consumer>>,
     sendfn: Box<Fn(&Sender, Option<Message>) + Send + Sync + 'static>,
     sender: Sender,
     receiver: Option<Receiver>,
@@ -73,7 +75,7 @@ impl NonblockLogger {
             exited: AtomicBool::new(false),
             filter: BaseFilter::new().boxed().unwrap(),
             formater: BaseFormater::new().boxed(),
-            outputer: Some(BaseOutputer::new().boxed()),
+            consumer: Some(BaseConsumer::new().boxed().unwrap()),
         }
     }
 
@@ -90,14 +92,14 @@ impl NonblockLogger {
         self
     }
 
-    pub fn filter<F: Filter>(mut self, filter: F) -> Self {
-        self.filter = filter.boxed().unwrap();
-        self
+    pub fn filter<F: Filter>(mut self, filter: F) -> Result<Self, Error> {
+        self.filter = filter.boxed()?;
+        Ok(self)
     }
 
-    pub fn outputer<O: Outputer>(mut self, outputer: O) -> Self {
-        self.outputer = Some(outputer.boxed());
-        self
+    pub fn consumer<C: Consumer>(mut self, consumer: C) -> Result<Self, Error> {
+        self.consumer = Some(consumer.boxed()?);
+        Ok(self)
     }
 
     pub fn name<S: Into<String>>(mut self, name: S) -> Self {
@@ -126,13 +128,13 @@ impl NonblockLogger {
 
     pub fn spawn(mut self) -> Result<JoinHandle, Error> {
         let name = mem::replace(&mut self.name, None).unwrap_or_else(|| NAME.into());
-        let mut outputer = mem::replace(&mut self.outputer, None).unwrap();
+        let mut consumer = mem::replace(&mut self.consumer, None).unwrap();
         let mc = self.log_to_channel()?;
 
         thread::Builder::new()
             .name(name)
             .spawn(move || {
-                outputer.consumer_all(mc);
+                consumer.consume(mc);
                 Self::global().map(|g| g.exit());
             })
             .map(|jh| JoinHandle::new(Self::global().unwrap(), jh))
@@ -140,13 +142,13 @@ impl NonblockLogger {
     }
     pub fn log_to_stdout(mut self) -> Result<JoinHandle, Error> {
         let maxlevel = self.filter.maxlevel();
-        self.outputer = Some(BaseOutputer::stdout(maxlevel).boxed());
+        self.consumer = Some(BaseConsumer::stdout(maxlevel).boxed()?);
 
         self.spawn()
     }
     pub fn log_to_stderr(mut self) -> Result<JoinHandle, Error> {
         let maxlevel = self.filter.maxlevel();
-        self.outputer = Some(BaseOutputer::stderr(maxlevel).boxed());
+        self.consumer = Some(BaseConsumer::stderr(maxlevel).boxed()?);
 
         self.spawn()
     }
@@ -225,24 +227,6 @@ impl fmt::Debug for NonblockLogger {
             .field("name", &self.name)
             .field("exited", &self.exited)
             .finish()
-    }
-}
-
-#[derive(Debug)]
-pub enum Error {
-    Io(io::Error),
-    Log(SetLoggerError),
-}
-
-impl From<io::Error> for Error {
-    fn from(e: io::Error) -> Self {
-        Error::Io(e)
-    }
-}
-
-impl From<SetLoggerError> for Error {
-    fn from(e: SetLoggerError) -> Self {
-        Error::Log(e)
     }
 }
 

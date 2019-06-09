@@ -1,15 +1,16 @@
 use log::{Level, LevelFilter, Metadata, Record};
 use std::cmp::{max, Ordering};
+use Error;
 
 pub trait Filter: Send + Sync + 'static {
-    fn boxed(self) -> Result<Box<dyn Filter>, Vec<(String, LevelFilter)>>;
+    fn boxed(self) -> Result<Box<dyn Filter>, Error>;
     fn log(&self, &Record) -> bool;
     fn enabled(&self, metadata: &Metadata) -> bool;
     fn maxlevel(&self) -> LevelFilter;
 }
 
 impl Filter for BaseFilter {
-    fn boxed(self) -> Result<Box<dyn Filter>, Vec<(String, LevelFilter)>> {
+    fn boxed(self) -> Result<Box<dyn Filter>, Error> {
         Ok(Box::new(self.built()?) as _)
     }
     fn log(&self, record: &Record) -> bool {
@@ -24,7 +25,7 @@ impl Filter for BaseFilter {
 }
 
 impl BaseFilter {
-    fn built(mut self) -> Result<Self, Vec<(String, LevelFilter)>> {
+    fn built(mut self) -> Result<Self, Error> {
         // dbg!(&self);
         self.filters.sort_by(|a, b| a.0.cmp(&b.0));
         // dbg!(&self);
@@ -39,7 +40,7 @@ impl BaseFilter {
         // dbg!(&self);
 
         if filters_length > self.filters.len() {
-            return Err(self.filters);
+            Err("dedup token effect")?;
         }
 
         Ok(self)

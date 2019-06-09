@@ -2,7 +2,7 @@
 extern crate log;
 
 use log::LevelFilter;
-use nonblock_logger::{messages_in_channel, BaseFilter, BaseFormater, BaseOutputer, JoinHandle, NonblockLogger};
+use nonblock_logger::{messages_in_channel, BaseFilter, BaseFormater, BaseConsumer, JoinHandle, NonblockLogger};
 
 use std::{fs::OpenOptions, io, time};
 
@@ -17,7 +17,7 @@ fn log() -> JoinHandle {
         .chain("logt", LevelFilter::Off);
     println!("{:?}", filter);
 
-    let outputer = BaseOutputer::stdout(filter.max_level_get())
+    let consumer = BaseConsumer::stdout(filter.max_level_get())
         .chain(
             LevelFilter::Info,
             OpenOptions::new()
@@ -30,13 +30,15 @@ fn log() -> JoinHandle {
         .unwrap()
         .chain(LevelFilter::Error, io::stderr())
         .unwrap();
-    println!("{:?}", outputer);
+    println!("{:?}", consumer);
 
     let logger = NonblockLogger::new()
         // ::with_capacity(65536)
         .formater(formater)
         .filter(filter)
-        .outputer(outputer);
+        .and_then(|l|l.consumer(consumer))
+        .unwrap();
+
     println!("{:?}", logger);    
 
     logger.spawn()
