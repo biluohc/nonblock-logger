@@ -1,11 +1,20 @@
 [package]
+license = "MIT"
+readme = "readme.md"
+repository = "https://github.com/biluohc/nonblock-logger"
+documentation = "https://docs.rs/nonblock-logger"
+description = "A non-blocking logger for Rust"
+categories = ["development-tools::debugging"]
+keywords = ["log", "logging", "logger"]
+exclude = ["examples/color/logtest.txt"]
+
 name = "nonblock-logger"
-version = "0.0.3"
+version = "0.1.0"
 authors = ["Wspsxing <biluohc@qq.com>"]
 # edition = "2018"
 
 [features]
-color = ["colored"]
+color = [ "colored" ]
 
 [dependencies]
 log = "0.4"
