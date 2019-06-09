@@ -100,8 +100,8 @@ impl BaseFormater {
     pub fn local_get(&self) -> bool {
         self.local
     }
-    pub fn level(mut self, level: usize) -> Self {
-        self.level = level;
+    pub fn level(mut self, chars: usize) -> Self {
+        self.level = chars;
         self
     }
     #[inline]
