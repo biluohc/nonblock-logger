@@ -2,6 +2,8 @@ extern crate chrono;
 #[cfg(any(feature = "color"))]
 extern crate colored;
 extern crate crossbeam_channel;
+#[allow(unused_imports)]
+#[macro_use]
 extern crate log;
 
 #[macro_use]

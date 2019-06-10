@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate log;
+// #[macro_use]
 extern crate nonblock_logger;
 
 use nonblock_logger::{messages_in_channel, NonblockLogger};
@@ -16,6 +17,9 @@ fn main() {
     include!("log.snippet");
 
     println!("join0_{}: {:?}", messages_in_channel(), now.elapsed());
+
+
+    // let _: usize = fatal!("fatal!() will return !");
 
     // wait for log thread
     handle.join();
