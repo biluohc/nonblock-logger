@@ -189,16 +189,26 @@ pub fn messages_in_channel() -> usize {
 
 pub struct JoinHandle {
     logger: &'static NonblockLogger,
-    join_handle: thread::JoinHandle<()>,
+    join_handle: Option<thread::JoinHandle<()>>,
 }
 
 impl JoinHandle {
     fn new(logger: &'static NonblockLogger, join_handle: thread::JoinHandle<()>) -> Self {
-        Self { logger, join_handle }
+        Self { logger, join_handle: Some(join_handle) }
     }
-    pub fn join(self) {
-        self.logger.send_exit();
-        self.join_handle.join().ok();
+    /// wait the log thread exit, can be called multiple times, but only takes effect for the first time.
+    pub fn join(&mut self) {
+        mem::replace(&mut self.join_handle, None).map(|h| {
+            self.logger.send_exit();
+            h.join().ok()
+        });
+    }
+}
+
+impl Drop for JoinHandle {
+    fn drop(&mut self) {
+        dbg!(self.join_handle.is_some());
+        self.join()
     }
 }
 

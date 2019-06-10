@@ -10,7 +10,7 @@ use std::time;
 fn main() {
     let formater = BaseFormater::new().formater(format);
 
-    let handle = NonblockLogger::new()
+    let mut handle = NonblockLogger::new()
         .formater(formater)
         .log_to_stdout()
         .map_err(|e| eprintln!("failed to init nonblock_logger: {:?}", e))
@@ -22,7 +22,6 @@ fn main() {
 
     println!("join0_{}: {:?}", messages_in_channel(), now.elapsed());
 
-    // wait for log thread
     handle.join();
 
     println!("join1_{}: {:?}", messages_in_channel(), now.elapsed());

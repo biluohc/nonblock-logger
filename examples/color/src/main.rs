@@ -47,7 +47,7 @@ fn log() -> JoinHandle {
 }
 
 fn main() {
-    let handle = log();
+    let mut handle = log();
 
     let now = time::Instant::now();
 

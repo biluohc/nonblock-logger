@@ -9,7 +9,7 @@ keywords = ["log", "logging", "logger"]
 exclude = ["examples/color/logtest.txt"]
 
 name = "nonblock-logger"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Wspsxing <biluohc@qq.com>"]
 # edition = "2018"
 
