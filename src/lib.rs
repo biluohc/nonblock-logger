@@ -207,7 +207,7 @@ impl JoinHandle {
 
 impl Drop for JoinHandle {
     fn drop(&mut self) {
-        dbg!(self.join_handle.is_some());
+        // dbg!(self.join_handle.is_some());
         self.join()
     }
 }
