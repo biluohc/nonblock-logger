@@ -13,12 +13,15 @@ impl Filter for BaseFilter {
     fn boxed(self) -> Result<Box<dyn Filter>, Error> {
         Ok(Box::new(self.built()?) as _)
     }
+
     fn log(&self, record: &Record) -> bool {
         self.check(record.target(), record.level())
     }
+
     fn enabled(&self, metadata: &Metadata) -> bool {
         self.check(metadata.target(), metadata.level())
     }
+
     fn maxlevel(&self) -> LevelFilter {
         self.max_level
     }
@@ -45,6 +48,7 @@ impl BaseFilter {
 
         Ok(self)
     }
+
     fn check(&self, target: &str, level: Level) -> bool {
         if let Some(idx) = self
             .filters
@@ -115,6 +119,7 @@ impl BaseFilter {
         self.max_level = max_level;
         self
     }
+
     // outer use as arg for Logger
     pub fn max_level_get(&self) -> LevelFilter {
         let has = self.max_level;
@@ -127,6 +132,7 @@ impl BaseFilter {
         }
         has
     }
+
     pub fn starts_with_get(&self) -> bool {
         self.starts_with
     }

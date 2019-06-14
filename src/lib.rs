@@ -64,10 +64,12 @@ impl NonblockLogger {
         let (mp, mc) = channel::unbounded();
         Self::new2(mp, mc)
     }
+
     pub fn with_capacity(cap: usize) -> Self {
         let (mp, mc) = channel::bounded(cap);
         Self::new2(mp, mc)
     }
+
     fn new2(mp: Sender, mc: Receiver) -> Self {
         Self {
             name: None,
@@ -142,12 +144,14 @@ impl NonblockLogger {
             .map(|jh| JoinHandle::new(Self::global().unwrap(), jh))
             .map_err(Error::from)
     }
+
     pub fn log_to_stdout(mut self) -> Result<JoinHandle, Error> {
         let maxlevel = self.filter.maxlevel();
         self.consumer = Some(BaseConsumer::stdout(maxlevel).boxed()?);
 
         self.spawn()
     }
+
     pub fn log_to_stderr(mut self) -> Result<JoinHandle, Error> {
         let maxlevel = self.filter.maxlevel();
         self.consumer = Some(BaseConsumer::stderr(maxlevel).boxed()?);
@@ -160,15 +164,19 @@ impl NonblockLogger {
     pub fn global() -> Option<&'static Self> {
         unsafe { LOGGER.as_ref().map(|g| g.0.as_ref()) }
     }
+
     pub fn send_exit(&self) {
         (*self.sendfn)(&self.sender, None)
     }
+
     pub fn exit(&self) {
         self.exited.store(true, Ordering::SeqCst)
     }
+
     pub fn exited(&self) -> bool {
         self.exited.load(Ordering::Relaxed)
     }
+
     pub fn messages_in_channel(&self) -> usize {
         self.sender.len()
     }
@@ -194,8 +202,12 @@ pub struct JoinHandle {
 
 impl JoinHandle {
     fn new(logger: &'static NonblockLogger, join_handle: thread::JoinHandle<()>) -> Self {
-        Self { logger, join_handle: Some(join_handle) }
+        Self {
+            logger,
+            join_handle: Some(join_handle),
+        }
     }
+
     /// wait the log thread exit, can be called multiple times, but only takes effect for the first time.
     pub fn join(&mut self) {
         mem::replace(&mut self.join_handle, None).map(|h| {

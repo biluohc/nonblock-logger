@@ -12,9 +12,9 @@ fn main() {
     {
         // use Drop wait for log thread
         let _handle = NonblockLogger::new()
-        .log_to_stdout()
-        .map_err(|e| eprintln!("failed to init nonblock_logger: {:?}", e))
-        .unwrap();
+            .log_to_stdout()
+            .map_err(|e| eprintln!("failed to init nonblock_logger: {:?}", e))
+            .unwrap();
 
         now = time::Instant::now();
 

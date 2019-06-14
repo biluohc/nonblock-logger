@@ -13,6 +13,7 @@ impl Formater for BaseFormater {
     fn boxed(self) -> Box<dyn Formater> {
         Box::new(self) as _
     }
+
     fn format(&self, record: &Record) -> String {
         self.formater_get()(self, record)
     }
@@ -92,30 +93,37 @@ impl BaseFormater {
             color: ColoredLogConfig::new(),
         }
     }
+
     pub fn local(mut self, local: bool) -> Self {
         self.local = local;
         self
     }
+
     #[inline]
     pub fn local_get(&self) -> bool {
         self.local
     }
+
     pub fn level(mut self, chars: usize) -> Self {
         self.level = chars;
         self
     }
+
     #[inline]
     pub fn level_get(&self) -> usize {
         self.level
     }
+
     pub fn datetime<S: Into<String>>(mut self, datetime: S) -> Self {
         self.datetime = datetime.into();
         self
     }
+
     #[inline]
     pub fn datetime_get(&self) -> &str {
         &self.datetime
     }
+
     pub fn formater<F>(mut self, formater: F) -> Self
     where
         F: Fn(&Self, &Record) -> String + Send + Sync + 'static,
@@ -123,20 +131,24 @@ impl BaseFormater {
         self.formater = Box::new(formater) as _;
         self
     }
+
     #[inline]
     pub fn formater_get(&self) -> &(Fn(&Self, &Record) -> String + Send + Sync + 'static) {
         &*self.formater
     }
+
     #[cfg(any(feature = "color"))]
     pub fn color(mut self, color_: bool) -> Self {
         self.color.color = color_;
         self
     }
+
     #[inline]
     #[cfg(any(feature = "color"))]
     pub fn color_get(&self) -> &ColoredLogConfig {
         &self.color
     }
+
     #[cfg(any(feature = "color"))]
     pub fn colored(mut self, color: ColoredLogConfig) -> Self {
         self.color = color;
@@ -184,12 +196,14 @@ impl FixedLevel {
             color: None,
         }
     }
+
     #[inline]
     pub fn length(mut self, length: usize) -> Self {
         debug_assert!(length <= 5);
         self.length = length;
         self
     }
+
     #[inline]
     #[cfg(any(feature = "color"))]
     pub fn with_color(level: Level, color_: &ColoredLogConfig) -> Self {
@@ -207,6 +221,7 @@ impl FixedLevel {
             color: if color_.color { Some(color) } else { None },
         }
     }
+
     #[cfg(any(feature = "color"))]
     pub fn into_colored(self) -> ColoredFixedLevel {
         ColoredFixedLevel::new(self)
@@ -282,30 +297,37 @@ pub mod color {
                 color: true,
             }
         }
+
         pub fn error(mut self, error: Color) -> Self {
             self.error = error;
             self
         }
+
         pub fn warn(mut self, warn: Color) -> Self {
             self.warn = warn;
             self
         }
+
         pub fn info(mut self, info: Color) -> Self {
             self.info = info;
             self
         }
+
         pub fn debug(mut self, debug: Color) -> Self {
             self.debug = debug;
             self
         }
+
         pub fn trace(mut self, trace: Color) -> Self {
             self.trace = trace;
             self
         }
+
         pub fn color(mut self, color: bool) -> Self {
             self.color = color;
             self
         }
+
         pub fn coloredfg<T>(&self, level: Level, t: T) -> ColoredFgWith<T>
         where
             T: ColoredFg<T>,
@@ -351,6 +373,7 @@ pub mod color {
         pub fn new(fl: FixedLevel) -> Self {
             ColoredFixedLevel(fl)
         }
+
         #[inline]
         pub fn into_coloredfg(mut self) -> ColoredFgWith<Self> {
             let color = mem::replace(&mut self.0.color, None);

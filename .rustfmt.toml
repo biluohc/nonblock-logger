@@ -1,7 +1,10 @@
 verbose = "Verbose"
+unstable_features = true
+# edition = "2018"
+reorder_impl_items = true
+merge_imports = false
 format_strings = false
 max_width = 128
 tab_spaces = 4
 newline_style = "Unix"
-
 

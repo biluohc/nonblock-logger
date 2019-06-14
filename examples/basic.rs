@@ -18,7 +18,6 @@ fn main() {
 
     println!("join0_{}: {:?}", messages_in_channel(), now.elapsed());
 
-
     // let _: usize = fatal!("fatal!() will return !");
 
     // wait for log thread

@@ -12,6 +12,7 @@ impl Consumer for BaseConsumer {
     fn boxed(self) -> Result<Box<dyn Consumer>, Error> {
         Ok(Box::new(self) as _)
     }
+
     fn consume(&mut self, channel: Receiver) {
         for message in channel {
             if let Some(message) = message {
@@ -49,19 +50,24 @@ impl BaseConsumer {
     pub fn new() -> Self {
         Self::default()
     }
+
     pub fn chain<O: Outputer>(mut self, level: LevelFilter, outputer: O) -> Result<Self, Error> {
         self.outputers.push((level, outputer.boxed()?));
         Ok(self)
     }
+
     pub fn stdout(level: LevelFilter) -> Self {
         Self::new().chain(level, stdout()).unwrap()
     }
+
     pub fn stderr(level: LevelFilter) -> Self {
         Self::new().chain(level, stderr()).unwrap()
     }
+
     pub fn file(level: LevelFilter, file: File) -> Self {
         Self::new().chain(level, file).unwrap()
     }
+
     pub fn bufwriter<W>(level: LevelFilter, bufwriter: BufWriter<W>) -> Self
     where
         W: Write + Send + Sync + 'static,
@@ -79,6 +85,7 @@ impl Outputer for Stdout {
     fn boxed(self) -> Result<Box<dyn Outputer>, Error> {
         Ok(Box::new(self) as _)
     }
+
     fn desc(&self) -> &str {
         "stdout"
     }
@@ -88,6 +95,7 @@ impl Outputer for Stderr {
     fn boxed(self) -> Result<Box<dyn Outputer>, Error> {
         Ok(Box::new(self) as _)
     }
+
     fn desc(&self) -> &str {
         "stderr"
     }
@@ -97,6 +105,7 @@ impl Outputer for File {
     fn boxed(self) -> Result<Box<dyn Outputer>, Error> {
         Ok(Box::new(self) as _)
     }
+
     fn desc(&self) -> &str {
         "file"
     }
@@ -109,6 +118,7 @@ where
     fn boxed(self) -> Result<Box<dyn Outputer>, Error> {
         Ok(Box::new(self) as _)
     }
+
     fn desc(&self) -> &str {
         "bufwriter"
     }
