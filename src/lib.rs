@@ -1,10 +1,13 @@
-extern crate chrono;
+#[doc(hidden)]
+pub extern crate chrono;
 #[cfg(any(feature = "color"))]
 extern crate colored;
-extern crate crossbeam_channel;
+#[doc(hidden)]
+pub extern crate crossbeam_channel;
+// re-export log crate
 #[allow(unused_imports)]
 #[macro_use]
-extern crate log;
+pub extern crate log;
 
 #[macro_use]
 #[doc(hidden)]
@@ -14,6 +17,9 @@ mod error;
 mod filter;
 mod formater;
 
+// re-export macros
+pub use log::{debug, error, info, log, trace, warn};
+
 pub use consumer::{BaseConsumer, Consumer, Outputer};
 pub use error::Error;
 pub use filter::{BaseFilter, Filter};
@@ -22,6 +28,7 @@ pub use formater::color::{ColoredFg, ColoredFgWith, ColoredFixedLevel, ColoredLo
 pub use formater::{current_thread_name, BaseFormater, FixedLevel, Formater};
 
 use crossbeam_channel as channel;
+
 use log::{set_logger, set_max_level, Level, Log, Metadata, Record, SetLoggerError};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
@@ -219,7 +226,8 @@ impl JoinHandle {
 
 impl Drop for JoinHandle {
     fn drop(&mut self) {
-        // dbg!(self.join_handle.is_some());
+        #[cfg(any(feature = "dbg"))]
+        dbg!(self.join_handle.is_some());
         self.join()
     }
 }

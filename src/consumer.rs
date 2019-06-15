@@ -1,11 +1,11 @@
+use crate::{Error, Receiver};
 use log::LevelFilter;
 use std::io::{stderr, stdout, BufWriter, Stderr, Stdout, Write};
 use std::{fmt, fs::File};
-use {Error, Receiver};
 
 pub trait Consumer: Send + Sync + 'static {
     fn boxed(self) -> Result<Box<dyn Consumer>, Error>;
-    fn consume(&mut self, Receiver);
+    fn consume(&mut self, channel: Receiver);
 }
 
 impl Consumer for BaseConsumer {

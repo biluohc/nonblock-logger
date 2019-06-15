@@ -1,10 +1,10 @@
+use crate::Error;
 use log::{Level, LevelFilter, Metadata, Record};
 use std::cmp::{max, Ordering};
-use Error;
 
 pub trait Filter: Send + Sync + 'static {
     fn boxed(self) -> Result<Box<dyn Filter>, Error>;
-    fn log(&self, &Record) -> bool;
+    fn log(&self, record: &Record) -> bool;
     fn enabled(&self, metadata: &Metadata) -> bool;
     fn maxlevel(&self) -> LevelFilter;
 }

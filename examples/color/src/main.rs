@@ -1,8 +1,7 @@
 #[macro_use]
-extern crate log;
+extern crate nonblock_logger;
 
-use log::LevelFilter;
-use nonblock_logger::{messages_in_channel, BaseFilter, BaseFormater, BaseConsumer, JoinHandle, NonblockLogger};
+use nonblock_logger::{log::LevelFilter, messages_in_channel, BaseFilter, BaseFormater, BaseConsumer, JoinHandle, NonblockLogger};
 
 use std::{fs::OpenOptions, io, time};
 

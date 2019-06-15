@@ -5,6 +5,5 @@ authors = ["Wspsxing <biluohc@qq.com>"]
 edition = "2018"
 
 [dependencies]
-log = "0.4"
-# nonblock-logger = { version = "0.0", features = [ "color" ] }
+# nonblock-logger = { version = "0.1", features = [ "color" ] }
 nonblock-logger = { path = "../..", features = [ "color" ] }

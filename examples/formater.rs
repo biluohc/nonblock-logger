@@ -1,10 +1,9 @@
 #[macro_use]
-extern crate log;
-extern crate chrono;
 extern crate nonblock_logger;
+extern crate chrono;
 
-use log::Record;
-use nonblock_logger::{messages_in_channel, BaseFormater, FixedLevel, NonblockLogger};
+use nonblock_logger::{log::Record, messages_in_channel, BaseFormater, FixedLevel, NonblockLogger};
+
 use std::time;
 
 fn main() {

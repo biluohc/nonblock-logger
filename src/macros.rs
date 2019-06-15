@@ -1,6 +1,6 @@
+use crate::NonblockLogger;
 pub use log::Level;
 pub use std::process;
-use NonblockLogger;
 
 pub fn wait_or_eprintln() {
     use std::{thread, time::Duration};
@@ -15,6 +15,7 @@ pub fn wait_or_eprintln() {
     }
 }
 
+/// Logs a message at the error level and exit process with exit code 1.
 #[macro_export]
 macro_rules! fatal {
     (target: $target:expr, $($arg:tt)*) => (

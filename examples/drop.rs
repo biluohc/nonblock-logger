@@ -1,6 +1,4 @@
 #[macro_use]
-extern crate log;
-// #[macro_use]
 extern crate nonblock_logger;
 
 use nonblock_logger::{messages_in_channel, NonblockLogger};

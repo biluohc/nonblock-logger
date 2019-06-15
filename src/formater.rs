@@ -6,7 +6,7 @@ use std::{fmt, mem, thread};
 
 pub trait Formater: Send + Sync + 'static {
     fn boxed(self) -> Box<dyn Formater>;
-    fn format(&self, &Record) -> String;
+    fn format(&self, record: &Record) -> String;
 }
 
 impl Formater for BaseFormater {
@@ -337,7 +337,7 @@ pub mod color {
     }
 
     pub trait ColoredFg<T> {
-        fn coloredfg(self, level: Level, &ColoredLogConfig) -> ColoredFgWith<T>;
+        fn coloredfg(self, level: Level, config: &ColoredLogConfig) -> ColoredFgWith<T>;
     }
 
     impl<T: fmt::Display> ColoredFg<T> for T {
