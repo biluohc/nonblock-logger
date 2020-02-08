@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate nonblock_logger;
 
-use nonblock_logger::{messages_in_channel, NonblockLogger};
+use nonblock_logger::{log::Level::Info, messages_in_channel, NonblockLogger};
 use std::time;
 
 fn main() {
@@ -13,6 +13,9 @@ fn main() {
     let now = time::Instant::now();
 
     include!("log.snippet");
+    if log_enabled!(Info) {
+        println!("INFO enabled");
+    }
 
     println!("join0_{}: {:?}", messages_in_channel(), now.elapsed());
 

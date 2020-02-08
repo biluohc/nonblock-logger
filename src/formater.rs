@@ -133,7 +133,7 @@ impl BaseFormater {
     }
 
     #[inline]
-    pub fn formater_get(&self) -> &(Fn(&Self, &Record) -> String + Send + Sync + 'static) {
+    pub fn formater_get(&self) -> &(dyn Fn(&Self, &Record) -> String + Send + Sync + 'static) {
         &*self.formater
     }
 

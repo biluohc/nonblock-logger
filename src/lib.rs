@@ -18,7 +18,7 @@ mod filter;
 mod formater;
 
 // re-export macros
-pub use log::{debug, error, info, log, trace, warn};
+pub use log::{debug, error, info, log, log_enabled, trace, warn};
 
 pub use consumer::{BaseConsumer, Consumer, Outputer};
 pub use error::Error;
@@ -45,7 +45,7 @@ pub struct NonblockLogger {
     filter: Box<dyn Filter>,
     formater: Box<dyn Formater>,
     consumer: Option<Box<dyn Consumer>>,
-    sendfn: Box<Fn(&Sender, Option<Message>) + Send + Sync + 'static>,
+    sendfn: Box<dyn Fn(&Sender, Option<Message>) + Send + Sync + 'static>,
     sender: Sender,
     receiver: Option<Receiver>,
     exited: AtomicBool,
