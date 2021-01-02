@@ -10,19 +10,15 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{:?}", self)
+        match self {
+            Error::Io(io) => write!(fmt, "{}", io),
+            Error::Log(log) => write!(fmt, "{}", log),
+            Error::Desc(desc) => write!(fmt, "{}", desc.as_ref()),
+        }
     }
 }
 
 impl std::error::Error for Error {
-    fn description(&self) -> &str {
-        match self {
-            Error::Io(io) => io.description(),
-            Error::Log(_) => "log::SetLoggerError",
-            Error::Desc(desc) => desc.as_ref(),
-        }
-    }
-
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Error::Io(io) => io.source(),

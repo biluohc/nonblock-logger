@@ -9,7 +9,7 @@ keywords = ["log", "logging", "logger"]
 exclude = ["examples/color/logtest.txt"]
 
 name = "nonblock-logger"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Wspsxing <biluohc@qq.com>"]
 edition = "2018"
 
@@ -20,5 +20,5 @@ color = [ "colored" ]
 [dependencies]
 log = "0.4"
 chrono = "0.4"
-crossbeam-channel = "0.4"
-colored = { version = "1.9", optional = true }
+crossbeam-channel = "0.5"
+colored = { version = "2.0", optional = true }
