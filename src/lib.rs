@@ -45,10 +45,11 @@ pub struct NonblockLogger {
     filter: Box<dyn Filter>,
     formater: Box<dyn Formater>,
     consumer: Option<Box<dyn Consumer>>,
-    sendfn: Box<dyn Fn(&Sender, Option<Message>) + Send + Sync + 'static>,
+    sendfn: Box<dyn Fn(&NonblockLogger, Option<Message>) + Send + Sync + 'static>,
     sender: Sender,
     receiver: Option<Receiver>,
     exited: AtomicBool,
+    quiet: bool,
 }
 
 pub type Sender = channel::Sender<Option<Message>>;
@@ -84,6 +85,7 @@ impl NonblockLogger {
             receiver: Some(mc),
             sendfn: Box::new(sendfn) as _,
             exited: AtomicBool::new(false),
+            quiet: false,
             filter: BaseFilter::new().boxed().unwrap(),
             formater: BaseFormater::new().boxed(),
             consumer: Some(BaseConsumer::new().boxed().unwrap()),
@@ -92,7 +94,7 @@ impl NonblockLogger {
 
     pub fn sendfn<F>(mut self, sendfn: F) -> Self
     where
-        F: Fn(&Sender, Option<Message>) + Send + Sync + 'static,
+        F: Fn(&NonblockLogger, Option<Message>) + Send + Sync + 'static,
     {
         self.sendfn = Box::new(sendfn) as _;
         self
@@ -120,6 +122,16 @@ impl NonblockLogger {
 
     pub fn name_get(&self) -> Option<&String> {
         self.name.as_ref()
+    }
+
+    /// Don't panic if failed to send message to the consumer thread
+    pub fn quiet(mut self) -> Self {
+        self.quiet = true;
+        self
+    }
+
+    pub fn quiet_get(&self) -> bool {
+        self.quiet
     }
 
     fn log_to_channel(mut self) -> Result<Receiver, SetLoggerError> {
@@ -173,7 +185,7 @@ impl NonblockLogger {
     }
 
     pub fn send_exit(&self) {
-        (*self.sendfn)(&self.sender, None)
+        (*self.sendfn)(&self, None)
     }
 
     pub fn exit(&self) {
@@ -190,11 +202,28 @@ impl NonblockLogger {
 }
 
 // if channel is full, send will block, but try_send don't
-fn sendfn(sender: &Sender, msg: Option<Message>) {
-    if msg.is_some() {
-        sender.try_send(msg).expect("NonblockLogger send log message falied!")
-    } else {
-        sender.try_send(msg).expect("NonblockLogger send exit message falied!")
+fn sendfn(logger: &NonblockLogger, msg: Option<Message>) {
+    let res = logger.sender.try_send(msg);
+
+    if let Err(e) = &res {
+        if logger.quiet {
+            return;
+        }
+
+        use crossbeam_channel::TrySendError::*;
+        let is_some = match e {
+            Full(t) => t,
+            Disconnected(t) => t,
+        }
+        .is_some();
+
+        let e = if is_some {
+            "NonblockLogger send log message falied!"
+        } else {
+            "NonblockLogger send exit message falied!"
+        };
+
+        res.expect(e);
     }
 }
 
@@ -248,7 +277,7 @@ impl Log for NonblockLoggerGlobal {
             let content = g.formater.format(record);
             let message = Message::new(content, record.level());
 
-            (*g.sendfn)(&g.sender, Some(message))
+            (*g.sendfn)(&g, Some(message))
         }
     }
 }
