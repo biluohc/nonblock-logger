@@ -24,8 +24,8 @@ c:
 	cargo clean -p nonblock-logger
 
 t: 
-	cargo test -- --nocapture && cargo run --example run_all
+	cargo test -- --nocapture && cargo run --example runall
 
 tr: 
-	cargo test --release -- --nocapture && cargo run --example run_all --release -- release
+	cargo test --release -- --nocapture && cargo run --example runall --release -- release
 
