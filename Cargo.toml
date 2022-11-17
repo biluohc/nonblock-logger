@@ -9,12 +9,12 @@ keywords = ["log", "logging", "logger"]
 exclude = ["examples/color/logtest.txt"]
 
 name = "nonblock-logger"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Wspsxing <biluohc@qq.com>"]
 edition = "2018"
 
 [features]
-default = ["color"]
+# default = ["color", "dbg"] # for dev
 dbg = []
 color = [ "yansi" ]
 

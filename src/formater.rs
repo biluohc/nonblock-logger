@@ -33,16 +33,18 @@ pub fn format(base: &BaseFormater, record: &Record) -> String {
     #[cfg(not(feature = "color"))]
     let level = FixedLevel::new(record.level()).length(base.level_get());
 
-    format!(
-        "{} {} [{}] ({}:{}) [{}] -- {}\n",
-        datetime,
-        level,
-        current_thread_name(),
-        record.file().unwrap_or("*"),
-        record.line().unwrap_or(0),
-        record.target(),
-        record.args()
-    )
+    current_thread_name(move |s| {
+        format!(
+            "{} {} [{}] ({}:{}) [{}] -- {}\n",
+            datetime,
+            level,
+            s,
+            record.file().unwrap_or("*"),
+            record.line().unwrap_or(0),
+            record.target(),
+            record.args()
+        )
+    })
 }
 
 impl fmt::Debug for BaseFormater {
@@ -155,7 +157,10 @@ impl BaseFormater {
     }
 }
 
-pub fn current_thread_name() -> &'static str {
+pub fn current_thread_name<F, U>(f: F) -> U
+where
+    F: Fn(&str) -> U,
+{
     struct ThreadId(u64);
 
     thread_local!(static THREAD_NAME: String = {
@@ -166,7 +171,7 @@ pub fn current_thread_name() -> &'static str {
         .unwrap_or_else(||"****".to_owned()))
     });
 
-    THREAD_NAME.with(|tname| unsafe { mem::transmute::<&str, &'static str>(tname.as_str()) })
+    THREAD_NAME.with(|tname| f(&tname))
 }
 
 #[derive(Debug, Clone, Copy)]
