@@ -33,12 +33,12 @@ pub fn format(base: &BaseFormater, record: &Record) -> String {
     #[cfg(not(feature = "color"))]
     let level = FixedLevel::new(record.level()).length(base.level_get());
 
-    current_thread_name(move |s| {
+    current_thread_name(|ctn| {
         format!(
             "{} {} [{}] ({}:{}) [{}] -- {}\n",
             datetime,
             level,
-            s,
+            ctn,
             record.file().unwrap_or("*"),
             record.line().unwrap_or(0),
             record.target(),
