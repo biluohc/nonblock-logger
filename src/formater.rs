@@ -247,9 +247,9 @@ use self::color::{Color, ColoredFixedLevel, ColoredLogConfig};
 #[cfg(any(feature = "color"))]
 pub mod color {
     use super::FixedLevel;
-    pub use colored::Color;
     use log::Level;
     use std::{fmt, mem};
+    pub use yansi::Color;
 
     pub struct ColoredFgWith<T> {
         text: T,
@@ -262,7 +262,7 @@ pub mod color {
     {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             if let Some(color) = self.color.as_ref() {
-                write!(f, "\x1B[{}m{}\x1B[0m", color.to_fg_str(), self.text)
+                write!(f, "{}", color.paint(&self.text))
             } else {
                 write!(f, "{}", self.text)
             }
@@ -289,11 +289,11 @@ pub mod color {
         #[inline]
         pub fn new() -> Self {
             Self {
-                error: Color::BrightRed,
+                error: Color::Red,
                 warn: Color::Yellow,
                 info: Color::Green,
                 debug: Color::Cyan,
-                trace: Color::BrightBlue,
+                trace: Color::Blue,
                 color: true,
             }
         }

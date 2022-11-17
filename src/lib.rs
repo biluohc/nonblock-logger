@@ -1,9 +1,9 @@
 #[doc(hidden)]
 pub extern crate chrono;
-#[cfg(any(feature = "color"))]
-extern crate colored;
 #[doc(hidden)]
 pub extern crate crossbeam_channel;
+#[cfg(any(feature = "color"))]
+extern crate yansi;
 // re-export log crate
 #[allow(unused_imports)]
 #[macro_use]
