@@ -1,4 +1,3 @@
-use chrono;
 use log::{Level, Record};
 
 use std::convert::AsRef;

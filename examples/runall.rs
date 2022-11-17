@@ -17,7 +17,7 @@ fn main() {
 
         if path.is_dir() {
             run_project(str, "", release)
-        } else if str.ends_with(".rs") && str != "run_all.rs" {
+        } else if str.ends_with(".rs") && str != "runall.rs" {
             run_project("", &str[..str.len() - 3], release)
         }
     }

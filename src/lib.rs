@@ -185,7 +185,7 @@ impl NonblockLogger {
     }
 
     pub fn send_exit(&self) {
-        (*self.sendfn)(&self, None)
+        (*self.sendfn)(self, None)
     }
 
     pub fn exit(&self) {
@@ -277,7 +277,7 @@ impl Log for NonblockLoggerGlobal {
             let content = g.formater.format(record);
             let message = Message::new(content, record.level());
 
-            (*g.sendfn)(&g, Some(message))
+            (*g.sendfn)(g, Some(message))
         }
     }
 }
